@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <output_filename>"
+  exit 1
+fi
+OUTPUT_FILENAME="$1"
+
+if [ -t 0 ]; then
+  echo "CSV data needs to be provided to STDIN"
+  exit 1
+fi
+
+rm -f "$OUTPUT_FILENAME"
+
+sqlite3 "$OUTPUT_FILENAME" <<SQL
+CREATE TABLE ppd(
+  "transaction_unique_identifier" TEXT,
+  "price" INTEGER,
+  "date_of_transfer" TEXT,
+  "postcode" TEXT,
+  "property_type" TEXT,
+  "old_or_new" TEXT,
+  "duration" TEXT,
+  "paon" TEXT,
+  "saon" TEXT,
+  "street" TEXT,
+  "locality" TEXT,
+  "town_city" TEXT,
+  "district" TEXT,
+  "county" TEXT,
+  "ppd_category_type" TEXT,
+  "record_status" TEXT
+);
+CREATE INDEX ppd_postcode_index ON ppd(postcode);
+CREATE INDEX ppd_price_index ON ppd(price);
+SQL
+
+cat | sqlite3 -csv -cmd '.import /dev/stdin ppd' "$OUTPUT_FILENAME" ''
+
+echo "Successfully created '$OUTPUT_FILENAME'"
+echo "Data is in the 'ppd' table."
+echo
+echo "Try this example query:"
+echo
+echo "    sqlite3 $OUTPUT_FILENAME 'select count(*) from ppd where price < 200'"

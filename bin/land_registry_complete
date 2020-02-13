@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <output_file>"
+  exit 1
+fi
+
+curl -#fL http://prod.publicdata.landregistry.gov.uk.s3-website-eu-west-1.amazonaws.com/pp-complete.csv |
+  bin/land_registry_csv_to_sqlite "$1"
